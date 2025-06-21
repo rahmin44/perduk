@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Парикмахерская БОСС</title>
+<style>
+  body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#121212; color:#f0f0f0; }
+  header { padding:2rem; background:#1e1e1e; text-align:center; }
+  header h1 { font-size:2.5rem; color:#facc15; margin-bottom:0.5rem; }
+  header p { font-size:1.2rem; color:#ccc; margin-bottom:1rem; }
+  .section { padding:2rem; text-align:center; animation: fade 0.5s ease; }
+  button { background:#facc15; color:#000; padding:0.75rem 1.5rem; border:none; border-radius:0.5rem; margin:0.5rem; cursor:pointer; font-size:1rem; }
+  button:hover { background:#e0b100; }
+  .hidden { display:none; }
+  .calendar { display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center; margin:1rem 0; }
+  .calendar button { width:4rem; }
+  footer { background:#1e1e1e; padding:1rem; text-align:center; color:#aaa; }
+  .contact { margin-top:1rem; font-size:0.9rem; }
+  input, textarea { width:90%; margin:0.5rem 0; padding:0.5rem; border-radius:0.3rem; border:none; }
+  .review { background:#1e1e1e; padding:1rem; margin:0.5rem; border-radius:0.5rem; }
+  @keyframes fade { from {opacity:0;} to {opacity:1;} }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Парикмахерская БОСС</h1>
+  <p>Будь стильным — будь с нами</p>
+  <button onclick="startBooking()">Записаться</button>
+  <button onclick="showSection('reviews')">Отзывы</button>
+  <div class="contact">
+    <p>Телефон: +7 (900) 123-45-67</p>
+    <p>Поддержка: support@parikboss.ru</p>
+  </div>
+</header>
+
+<div class="section hidden" id="branch-select">
+  <h2>Выберите филиал</h2>
+  <button onclick="selectBranch('solnechniy')">Солнечный проезд 23</button>
+  <button onclick="selectBranch('milika')">Милика 79</button>
+</div>
+
+<div class="section hidden" id="master-select">
+  <h2>Выберите специалиста</h2>
+  <div id="master-buttons"></div>
+</div>
+
+<div class="section hidden" id="date-select">
+  <h2>Выберите дату</h2>
+  <div class="calendar" id="calendar"></div>
+</div>
+
+<div class="section hidden" id="time-select">
+  <h2>Выберите время</h2>
+  <div id="time-buttons"></div>
+</div>
+
+<div class="section hidden" id="service-select">
+  <h2>Выберите услугу</h2>
+  <button onclick="selectService('Стрижка мужская')">Стрижка мужская</button>
+  <button onclick="selectService('ВИП стрижка')">ВИП стрижка</button>
+  <button onclick="selectService('Удлиненная стрижка')">Удлиненная стрижка</button>
+  <button onclick="selectService('Стрижка студента')">Стрижка студента</button>
+  <button onclick="selectService('Стрижка школьника')">Стрижка школьника</button>
+</div>
+
+<div class="section hidden" id="confirmation">
+  <h2>Вы успешно записаны!</h2>
+  <p id="confirm-text"></p>
+  <button onclick="showSection('home')">На главную</button>
+</div>
+
+<div class="section hidden" id="reviews">
+  <h2>Отзывы клиентов</h2>
+  <div id="review-list"></div>
+  <h3>Оставить отзыв</h3>
+  <input type="text" id="review-name" placeholder="Ваше имя" /><br />
+  <textarea id="review-text" rows="3" placeholder="Ваш отзыв..."></textarea><br />
+  <button onclick="addReview()">Отправить</button>
+  <button onclick="showSection('home')">На главную</button>
+</div>
+
+<footer>
+  <div>© 2025 Парикмахерская БОСС</div>
+</footer>
+
+<script>
+  const branches = {
+    'solnechniy': ['Дмитрий Чупахин','Егор Коваленко','Данила Караваев'],
+    'milika': ['Иван Иванов','Петр Петров','Сергей Сергеев']
+  };
+
+  let booking = { branch:'', master:'', date:'', time:'', service:'' };
+  const reviews = [];
+
+  function showSection(id) {
+    if (id === 'home') {
+      document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+      document.querySelector('header').classList.remove('hidden');
+      document.querySelector('footer').classList.remove('hidden');
+    } else {
+      document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+    }
+  }
+
+  function startBooking() {
+    showSection('branch-select');
+  }
+
+  function selectBranch(branch) {
+    booking.branch = branch;
+    const container = document.getElementById('master-buttons');
+    container.innerHTML = '';
+    branches[branch].forEach(m => {
+      const btn = document.createElement('button');
+      btn.textContent = m;
+      btn.onclick = () => selectMaster(m);
+      container.appendChild(btn);
+    });
+    showSection('master-select');
+  }
+
+  function selectMaster(master) {
+    booking.master = master;
+    const calendar = document.getElementById('calendar');
+    calendar.innerHTML = '';
+    // даты с 21 июня по 21 июля
+    const monthDays = { 'июня': 30, 'июля': 31 };
+    let currentDay = 21;
+    for (let i = 0; i < 31; i++) {
+      let day = currentDay + i;
+      let month = 'июня';
+      if (day > 30) {
+        day = day - 30;
+        month = 'июля';
+      }
+      const dateStr = day + ' ' + month;
+      const btn = document.createElement('button');
+      btn.textContent = dateStr;
+      btn.onclick = () => selectDate(dateStr);
+      calendar.appendChild(btn);
+    }
+    showSection('date-select');
+  }
+
+  function selectDate(date) {
+    booking.date = date;
+    const timeButtons = document.getElementById('time-buttons');
+    timeButtons.innerHTML = '';
+    for (let h = 10; h <= 20; h++) {
+      const btn = document.createElement('button');
+      btn.textContent = h + ':00';
+      btn.onclick = () => selectTime(h + ':00');
+      timeButtons.appendChild(btn);
+    }
+    showSection('time-select');
+  }
+
+  function selectTime(time) {
+    booking.time = time;
+    showSection('service-select');
+  }
+
+  function selectService(service) {
+    booking.service = service;
+    document.getElementById('confirm-text').textContent =
+      `Филиал: ${booking.branch === 'solnechniy' ? 'Солнечный проезд 23' : 'Милика 79'}
+Специалист: ${booking.master}
+Дата: ${booking.date}
+Время: ${booking.time}
+Услуга: ${booking.service}`;
+    showSection('confirmation');
+  }
+
+  function addReview() {
+    const name = document.getElementById('review-name').value.trim();
+    const text = document.getElementById('review-text').value.trim();
+    if (name && text) {
+      reviews.push({ name, text });
+      document.getElementById('review-name').value = '';
+      document.getElementById('review-text').value = '';
+      renderReviews();
+      alert('Спасибо за ваш отзыв!');
+    } else {
+      alert('Пожалуйста, заполните имя и отзыв.');
+    }
+  }
+
+  function renderReviews() {
+    const container = document.getElementById('review-list');
+    container.innerHTML = '';
+    reviews.forEach(r => {
+      const div = document.createElement('div');
+      div.className = 'review';
+      div.innerHTML = `<strong>${r.name}:</strong><br>${r.text}`;
+      container.appendChild(div);
+    });
+  }
+
+  // Показать главную страницу при загрузке
+  showSection('home');
+</script>
+
+</body>
+</html>
